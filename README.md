@@ -1,3 +1,3 @@
-![?](lib/soil.png) 
-![?](lib/detrius.png) 
-![?](lib/light.png) 
+![?](lib/1.png) 
+![?](lib/2.png) 
+![?](lib/3.png) 
