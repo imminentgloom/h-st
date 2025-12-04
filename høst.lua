@@ -1,3 +1,4 @@
+
 --      .                   
 --                         
 --          .          .     
@@ -231,6 +232,9 @@ g.key = function(x, y, z)
             stop_held()
          else
             hold = true
+            for n = 1, #playing do
+               playing[n].held = true
+            end
          end
       end
    elseif x == 1 and y == 2 then
