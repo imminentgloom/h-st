@@ -77,9 +77,18 @@ end
 
 local function stop_keys()
    for n = 1, #playing do
-      engine.harvest_note_off(playing[n][1])
+      engine.harvest_note_off(playing[n].note + playing[n].transpose)
    end
    playing = {}
+end
+
+local function stop_held()
+   for n = #playing, 1, -1 do
+      if playing[n].held then
+         engine.harvest_note_off(playing[n].note + playing[n].transpose)
+         table.remove(playing, n)
+      end
+   end
 end
 
 local function xy_to_note(x, y)
@@ -94,15 +103,15 @@ local function play_note(x, y, z, note)
    transpose = 12 * oct
    if z == 1 then 
       if #playing >= 4 then
-         engine.harvest_note_off(playing[1][1] + playing[1][2])
+         engine.harvest_note_off(playing[1].note + playing[1].transpose)
          table.remove(playing, 1)
       end
-      table.insert(playing, {note, transpose, x, y, "free"})
+      table.insert(playing, {note = note, transpose = transpose, x = x, y = y, held = false})
       engine.harvest_note_on(note + transpose, velocity, duration)
    else
       for i, v in pairs(playing) do
-         if v[3] == x and v[4] == y then
-            engine.harvest_note_off(playing[i][1] + playing[i][2])
+         if v.x == x and v.y == y then
+            engine.harvest_note_off(playing[i].note + playing[i].transpose)
             table.remove(playing, i)
             break
          end
@@ -116,8 +125,8 @@ local function hold_note(x, y, z, note)
       transpose = 12 * oct
       local voice = nil
       for i, v in pairs(playing) do
-         if v[3] == x and v[4] == y then
-            engine.harvest_note_off(playing[i][1] + playing[i][2])
+         if v.x == x and v.y == y then
+            engine.harvest_note_off(playing[i].note + playing[i].transpose)
             table.remove(playing, i)
             voice = i
             break
@@ -125,10 +134,10 @@ local function hold_note(x, y, z, note)
       end
       if voice == nil then
          if #playing >= 4 then
-            engine.harvest_note_off(playing[1][1] + playing[1][2])
+            engine.harvest_note_off(playing[1].note + playing[1].transpose)
             table.remove(playing, 1)
          end
-         table.insert(playing, {note, transpose, x, y, "held"})
+         table.insert(playing, {note = note, transpose = transpose, x = x, y = y, held = true})
          engine.harvest_note_on(note + transpose, velocity, duration)
       end
    end
@@ -141,7 +150,7 @@ params:add{
    type = "group",
    id   = "harvest",
    name = "HØST",
-   n    = 31
+   n    = 27
 }
 
 params:add{
@@ -166,7 +175,7 @@ function init()
    clk_redraw = clock.run(redraw_event)
    clk_splash = clock.run(splash_event)
 
-   Harvest.init(true)
+   Harvest.init(false)
    
    if save_on_exit then params:read(norns.state.data .. "state.pset") end
    params:set("focus", 1)
@@ -219,6 +228,14 @@ g.key = function(x, y, z)
       if z == 1 then
          if hold then 
             hold = false
+            stop_held()
+            -- for n = 1, #playing do
+            --    if playing[n][5] == "held" then
+            --       print(n)
+            --       engine.harvest_note_off(playing[n][3] + playing[n][4])
+            --       table.remove(playing, n)
+            --    end
+            -- end
          else
             hold = true
          end
@@ -427,7 +444,7 @@ end
 function redraw_grid()
    g:all(0)
 
-   local background = 2
+   local background = 3
    -- background
    for n = 6, 16 do g:led(n, 1, background) end
    for n = 5, 16 do g:led(n, 2, background) end
@@ -448,12 +465,12 @@ function redraw_grid()
 
    -- light up held keys
    for n = 1, #playing do
-      for m = 1, math.min(trail, playing[n][3] - 1) do
-         g:led(playing[n][3] - m, playing[n][4] + m, 0)
+      for m = 1, math.min(trail, playing[n].x - 1) do
+         g:led(playing[n].x - m, playing[n].y + m, 0)
       end
    end
    for n = 1, #playing do
-      g:led(playing[n][3], playing[n][4], 10)
+      g:led(playing[n].x, playing[n].y, 10)
    end
 
    -- col 1 on
