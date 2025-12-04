@@ -1,12 +1,12 @@
 --      .                   
 --                         
 --          .          .     
---   HøST
+--   .
 --                .         
 --    .                     
 --                         .
 -- .
--- v1.0 / imminent gloom 
+-- v1.0 / imminent gloom
 
 -- setup
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -22,7 +22,7 @@ local a = arc.connect()
 
 local s = screen
 local fps = 60
-local splash = false
+local splash = true
 local frame = 1
 
 local soil = {}
@@ -229,13 +229,6 @@ g.key = function(x, y, z)
          if hold then 
             hold = false
             stop_held()
-            -- for n = 1, #playing do
-            --    if playing[n][5] == "held" then
-            --       print(n)
-            --       engine.harvest_note_off(playing[n][3] + playing[n][4])
-            --       table.remove(playing, n)
-            --    end
-            -- end
          else
             hold = true
          end
@@ -368,14 +361,15 @@ function redraw()
    }
 
    s.clear()
-   s.aa(0)
-
+   
    if splash then
+      s.aa(1)
       s.level(splash_level)
-      s.move(63, 48)
-      s.font_face(9)
-      s.font_size(40)
+      s.move(63, 55)
+      s.font_face(12)
+      s.font_size(60)
       s.text_center("høst")
+      s.aa(0)
    else
       if focus == 1 then
          soil_level = levels[1][1]
@@ -627,5 +621,6 @@ end
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 function cleanup()
+   stop_keys()
    if save_on_exit then params:write(norns.state.data .. "state.pset") end
 end
