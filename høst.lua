@@ -1,4 +1,3 @@
-
 --      .                   
 --                         
 --          .          .     
@@ -25,9 +24,10 @@ local s = screen
 local fps = 60
 local splash = true
 local frame = 1
+local intensity = 8
 
-local soil = {}
-local particles = 48
+local particles = {}
+local density = 96
 
 local focus = 1
 local prev_focus = 1
@@ -50,6 +50,11 @@ local trail = 8
 local function redraw_event()
    while true do
       clock.sleep(1/fps)
+      if frame > fps then
+         frame = 1
+      else
+         frame = frame + 1
+      end
       redraw()
       redraw_grid()
       redraw_arc()
@@ -70,9 +75,9 @@ end
 -- functions
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-local function seed(n)
+local function seed(t, n)
    for n = 1, n do
-      soil[n] = {math.random(2, 127), math.random(2, 63)}
+      t[n] = {x = math.random(1, 128), y = math.random(1, 64), on = true, level = 15} 
    end
 end
 
@@ -121,10 +126,10 @@ local function play_note(x, y, z, note)
 end
 
 local function hold_note(x, y, z, note)
+   local voice = nil
    if z == 1 then
       note = note or xy_to_note(x, y)
       transpose = 12 * oct
-      local voice = nil
       for i, v in pairs(playing) do
          if v.x == x and v.y == y then
             engine.harvest_note_off(playing[i].note + playing[i].transpose)
@@ -138,8 +143,16 @@ local function hold_note(x, y, z, note)
             engine.harvest_note_off(playing[1].note + playing[1].transpose)
             table.remove(playing, 1)
          end
-         table.insert(playing, {note = note, transpose = transpose, x = x, y = y, held = true})
+         table.insert(playing, {note = note, transpose = transpose, x = x, y = y, held = false})
          engine.harvest_note_on(note + transpose, velocity, duration)
+      end
+   else
+      if voice == nil then
+         for n = 1, #playing do
+            if playing[n].held == false then
+               playing[n].held = true
+            end
+         end
       end
    end
 end
@@ -163,7 +176,13 @@ params:add{
    action      = function(x)
       prev_focus = focus
       focus = x
-      seed(particles)
+      if focus == 1 then
+         seed(particles, density)
+      elseif focus == 2 then
+         seed(particles, density)
+      elseif focus == 3 then
+         seed(particles, density)
+      end
    end
 }
 
@@ -171,7 +190,7 @@ params:add{
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 function init()
-   seed(particles)
+   seed(particles, density)
 
    clk_redraw = clock.run(redraw_event)
    clk_splash = clock.run(splash_event)
@@ -247,27 +266,27 @@ g.key = function(x, y, z)
       end
    elseif x == 1 and y == 3 then
       if z == 1 then
-         params:set("focus", 1)
+         oct = 3
       end
    elseif x == 1 and y == 4 then
       if z == 1 then
-         params:set("focus", 2)
+         oct = 2
       end
    elseif x == 1 and y == 5 then
       if z == 1 then
-         params:set("focus", 3)
+         oct = 1
       end
    elseif x == 1 and y == 6 then
       if z == 1 then
-         oct = 3
+         params:set("focus", 1)
       end
    elseif x == 1 and y == 7 then
       if z == 1 then
-         oct = 2
+         params:set("focus", 2)
       end
    elseif x == 1 and y == 8 then
       if z == 1 then
-         oct = 1
+         params:set("focus", 3)
       end
    else
       if not hold then
@@ -357,14 +376,19 @@ end
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 function redraw()
-   local lengths = {0, 2, 64}
-   local levels = {
-      {15,  0,  0,  0}, -- drone
-      {15,  3,  7,  0}, -- poly
-      {15,  3,  7,  0}, -- fx
-   }
-
    s.clear()
+   
+   local d_timbre = params:get("drone_timbre")
+   local d_noise = params:get("drone_noise")
+   local d_bias = params:get("drone_bias")
+   local p_timbre = params:get("poly_timbre")
+   local p_noise = params:get("poly_noise")
+   local p_bias = params:get("poly_bias")
+   local p_shape = params:get("poly_shape")
+   local f_peak_1 = params:get_raw("fx_peak_1")
+   local f_peak_2 = params:get_raw("fx_peak_2")
+   local f_meta = params:get("fx_meta")
+   local f_time = params:get_raw("fx_time")
    
    if splash then
       s.aa(1)
@@ -376,60 +400,186 @@ function redraw()
       s.aa(0)
    else
       if focus == 1 then
-         soil_level = levels[1][1]
-         leaf_level = levels[1][2]
-         light_level = levels[1][3]
-         dark_level = levels[1][4]
-         length = lengths[1]
-      elseif focus == 2 then
-         soil_level = levels[2][1]
-         leaf_level = levels[2][2]
-         light_level = levels[2][3]
-         dark_level = levels[2][4]
-         length = lengths[2]
-      elseif focus == 3 then
-         soil_level = levels[3][1]
-         leaf_level = levels[3][2]
-         light_level = levels[3][3]
-         dark_level = levels[3][4]
-         length = lengths[3]
-      end
-      
-      --light
-      s.level(light_level)
-      s.move(64, 0)
-      s.line(0, 64)
-      s.line(0, 64)
-      s.line(128, 64)
-      s.line(128, 0)
-      s.fill()
 
-      -- detrius
-      s.level(leaf_level)
-      s.line_width(1)
-      for n = 1, #soil do
-         x = soil[n][1]
-         y = soil[n][2]
-         s.move(x, y + 1)
-         s.line(x - length, y + 1 + length)
-      end
-      s.stroke()
+         -- noise
+         for n = 1, util.clamp(math.floor(#particles * (d_bias)), 1, #particles) do
+            if frame % 4 == 1 then
+               if math.random() < d_noise * 0.1 then
+                  particles[n].level = 1
+               else
+                  particles[n].level = 2
+               end
+            end
+         end
 
-      -- dark
-      s.level(dark_level)
-      s.move(64, 0)
-      s.line(0, 64)
-      s.line(0, 0)
-      s.fill()
-      
-      -- soil
-      s.level(soil_level)
-      for n = 1, #soil do
-         x = soil[n][1]
-         y = soil[n][2]
-         s.pixel(x, y)
+         -- detrius
+         for n = 1, util.clamp(math.floor(#particles * (d_bias)), 1, #particles) do
+            local level = 1
+
+            if d_timbre < 0.5 then
+               level = particles[n].level + math.floor(13 * (d_timbre * -2 + 1))
+            else
+               if particles[n].x % 32 > 16 then
+                  level = particles[n].level + math.floor(13 * (d_timbre * 2 - 1))
+               else
+                  level = particles[n].level
+               end
+            end
+               
+            s.level(level)
+            
+            if particles[n].on == true then
+               s.pixel(particles[n].x, particles[n].y)
+            end
+
+            s.fill()
+         end
       end
-      s.fill()
+
+      if focus == 2 then
+         local offset = 64 * p_timbre
+
+         --light
+         s.level(7)
+         s.rect(0, 0, 128, 64)
+         s.fill()
+
+         -- noise
+         if frame % 4 == 1 then
+            for n = 1, util.clamp(math.floor(#particles * (p_bias)), 1, #particles) do
+               if math.random() < p_noise * 0.1 then
+                  particles[n].level = 10
+               else
+                  particles[n].level = 15
+               end
+            end
+         end
+         
+         -- shadow
+         for n = 1, util.clamp(math.floor(#particles * p_bias), 1, #particles) do
+            x = particles[n].x
+            y = particles[n].y
+            for n = 1, 2 do
+               if particles[n].on == true then
+                  s.pixel(x - n, y + n)
+               end
+            end
+            s.level(3)
+            s.fill()
+         end
+
+         -- dark
+         if p_timbre < 0.5 then
+            s.level(0)
+            s.move(64 + offset, 0)
+            s.line(0 + offset, 64)
+            s.line(0, 64)
+            s.line(0, 0)
+            s.fill()
+         else
+            s.level(0)
+            s.move(88, 0)
+            s.line(24, 64)
+            s.line(0, 64)
+            s.line(0, 0)
+            s.move(56 + offset, 0)
+            s.line(-8 + offset, 64)
+            s.line(0 + offset * 2 - 32, 64)
+            s.line(64 + offset * 2 - 32, 0)
+            s.fill()
+         end
+         
+         -- detrius
+         for n = 1, util.clamp(math.floor(#particles * p_bias), 1, #particles) do
+            x = particles[n].x
+            y = particles[n].y
+            if particles[n].on == true then
+               s.pixel(x, y)
+               s.level(particles[n].level)
+               s.fill()
+            end
+         end
+      end
+
+      if focus == 3 then
+         local offset_1 = 64 * f_peak_1
+         local offset_2 = 64 * f_peak_2
+
+         --light
+         s.level(7)
+         s.rect(0, 0, 128, 64)
+         s.fill()
+
+         -- shadow
+         s.level(3)
+         for n = 1, util.clamp(math.floor(#particles * (1 - f_time)), 1, #particles) do
+            x = particles[n].x
+            y = particles[n].y
+            for n = 1, 2 + math.floor(62 * f_meta) do
+               if particles[n].on == true then
+                  s.pixel(x - n, y + n)
+               end
+            end
+         end
+         s.fill()
+
+         -- dark
+         s.level(1)
+         s.blend_mode(5)
+         if params:get("fx_type_1") == 1 then
+            s.move(64 + offset_1, 0)
+            s.line(0 + offset_1, 64)
+            s.line(128, 64)
+            s.line(128, 0)
+            s.fill()
+         elseif params:get("fx_type_1") == 2 then
+            local offset_1 = 128 * f_peak_1
+            s.move((32 - 32) + offset_1, 0)
+            s.line((-32 - 32) + offset_1, 64)
+            s.line((-32 + 32) + offset_1, 64)
+            s.line((32 + 32) + offset_1, 0)
+            s.fill()
+         elseif params:get("fx_type_1") == 3 then
+            s.move(0, 0)
+            s.line(0, 64)
+            s.line(0 + offset_1, 64)
+            s.line(64 + offset_1, 0)
+            s.fill()
+         end
+         
+         if params:get("fx_type_2") == 1 then
+            s.move(64 + offset_2, 0)
+            s.line(0 + offset_2, 64)
+            s.line(128, 64)
+            s.line(128, 0)
+            s.fill()
+         elseif params:get("fx_type_2") == 2 then
+            local offset_2 = 128 * f_peak_2
+            s.move((32 - 32) + offset_2, 0)
+            s.line((-32 - 32) + offset_2, 64)
+            s.line((-32 + 32) + offset_2, 64)
+            s.line((32 + 32) + offset_2, 0)
+            s.fill()
+         elseif params:get("fx_type_3") == 3 then
+            s.move(0, 0)
+            s.line(0, 64)
+            s.line(0 + offset_2, 64)
+            s.line(64 + offset_2, 0)
+            s.fill()
+         end
+         s.blend_mode(0)
+
+         -- detrius
+         s.level(15)
+         for n = 1, util.clamp(math.floor(#particles * (1 - f_time)), 1, #particles) do
+            x = particles[n].x
+            y = particles[n].y
+            if particles[n].on == true then
+               s.pixel(x, y)
+            end
+         end
+         s.fill()
+      end
    end
 
    s.update()
@@ -475,8 +625,8 @@ function redraw_grid()
    if hold then g:led(1, 1, 10) end 
    if params:get("poly_loop") == 2 then g:led(1, 2, 10) end 
    
-   g:led(1, 2 + focus, 5)
-   g:led(1, 9 - oct, 5)
+   g:led(1, 6 - oct, 5)
+   g:led(1, 5 + focus, 5)
 
    g:refresh()
 end
