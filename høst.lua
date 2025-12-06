@@ -164,14 +164,14 @@ params:add{
    type = "group",
    id   = "harvest",
    name = "HØST",
-   n    = 27
+   n    = 25
 }
 
 params:add{
    type        = "option",
    id          = "focus",
-   name        = "focus",
-   options     = {"drone", "poly", "fx"},
+   name        = "fokus",
+   options     = {"jord", "løv", "lys"},
    default     = 1, 
    action      = function(x)
       prev_focus = focus
@@ -526,47 +526,20 @@ function redraw()
          -- dark
          s.level(1)
          s.blend_mode(5)
-         if params:get("fx_type_1") == 1 then
-            s.move(64 + offset_1, 0)
-            s.line(0 + offset_1, 64)
-            s.line(128, 64)
-            s.line(128, 0)
-            s.fill()
-         elseif params:get("fx_type_1") == 2 then
-            local offset_1 = 128 * f_peak_1
-            s.move((32 - 32) + offset_1, 0)
-            s.line((-32 - 32) + offset_1, 64)
-            s.line((-32 + 32) + offset_1, 64)
-            s.line((32 + 32) + offset_1, 0)
-            s.fill()
-         elseif params:get("fx_type_1") == 3 then
-            s.move(0, 0)
-            s.line(0, 64)
-            s.line(0 + offset_1, 64)
-            s.line(64 + offset_1, 0)
-            s.fill()
-         end
-         
-         if params:get("fx_type_2") == 1 then
-            s.move(64 + offset_2, 0)
-            s.line(0 + offset_2, 64)
-            s.line(128, 64)
-            s.line(128, 0)
-            s.fill()
-         elseif params:get("fx_type_2") == 2 then
-            local offset_2 = 128 * f_peak_2
-            s.move((32 - 32) + offset_2, 0)
-            s.line((-32 - 32) + offset_2, 64)
-            s.line((-32 + 32) + offset_2, 64)
-            s.line((32 + 32) + offset_2, 0)
-            s.fill()
-         elseif params:get("fx_type_3") == 3 then
-            s.move(0, 0)
-            s.line(0, 64)
-            s.line(0 + offset_2, 64)
-            s.line(64 + offset_2, 0)
-            s.fill()
-         end
+        
+         local offset_1 = 128 * f_peak_1
+         s.move((32 - 32) + offset_1, 0)
+         s.line((-32 - 32) + offset_1, 64)
+         s.line((-32 + 32) + offset_1, 64)
+         s.line((32 + 32) + offset_1, 0)
+         s.fill()
+      
+         s.move((32 - 32) + offset_2, 0)
+         s.line((-32 - 32) + offset_2, 64)
+         s.line((-32 + 32) + offset_2, 64)
+         s.line((32 + 32) + offset_2, 0)
+         s.fill()
+       
          s.blend_mode(0)
 
          -- detrius
@@ -722,38 +695,17 @@ function redraw_arc()
       local hp1 = 0
       local hp2 = 0
 
-      if params:get("fx_type_1") == 1 then
-         lp1 = math.rad(offset)
-         lp2 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 63 + offset)
-         a:segment(1, lp1, lp2, level)
-      end 
-      if params:get("fx_type_1") == 2 then
-         bp1 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + offset)
-         bp2 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + 5.625 * 3 + offset)
-         a:segment(1, bp1, bp2, level)
-      end 
-      if params:get("fx_type_1") == 3 then
-         hp1 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 63 + offset)
-         hp2 = math.rad(offset + 5.625 * 63)
-         a:segment(1, hp1, hp2, level)
-      end 
+    
+      bp1 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + offset)
+      bp2 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + 5.625 * 3 + offset)
+      a:segment(1, bp1, bp2, level)
+      
       a:led(1, 33, 1)
       
-      if params:get("fx_type_2") == 1 then
-         lp1 = math.rad(offset)
-         lp2 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 63 + offset)
-         a:segment(2, lp1, lp2, level)
-      end 
-      if params:get("fx_type_2") == 2 then
-         bp1 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + offset)
-         bp2 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + 5.625 * 3 + offset)
-         a:segment(2, bp1, bp2, level)
-      end 
-      if params:get("fx_type_2") == 3 then
-         hp1 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 63 + offset)
-         hp2 = math.rad(offset + 5.625 * 63)
-         a:segment(2, hp1, hp2, level)
-      end 
+      bp1 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + offset)
+      bp2 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + 5.625 * 3 + offset)
+      a:segment(2, bp1, bp2, level)
+      
       a:led(2, 33, 1)
 
       s1 = math.rad(offset)
