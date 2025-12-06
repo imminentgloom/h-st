@@ -44,7 +44,7 @@ Engine_Harvest : CroneEngine {
 
       // initialize synth defs
       SynthDef(\harvestfx, {
-         var input, meta, filter, type1, type2, lp1, lp2, bp1, bp2, hp1, hp2, peak1, peak2, rq, delay, time, feedback, mix, gain, dist;
+         var input, meta, filter, peak1, peak2, rq, delay, time, feedback, mix, gain, dist;
   
          input = In.ar(\inBus.ir(10), 2);
 
@@ -52,17 +52,8 @@ Engine_Harvest : CroneEngine {
          rq = LinSelectX.kr(meta * 2, [0.001, 0.5, 0.4]);
          feedback = LinSelectX.kr(meta * 2, [0, 0.2, 0.99]);
 
-         type1 = \type1.kr(0.5, 0.1) * 2;
-         lp1 = LinSelectX.kr(type1, [1, 0, 0]);
-         bp1 = LinSelectX.kr(type1, [0, 1, 0]);
-         hp1 = LinSelectX.kr(type1, [0, 0, 1]);
-         peak1 = SVF.ar(input, \peak1.kr(10000, 0.1).clip(20, 20000), rq.clip(0.001, 4), lp1, bp1, hp1);
-
-         type2 = \type2.kr(0.5, 0.1) * 2;
-         lp2 = LinSelectX.kr(type2, [1, 0, 0]);
-         bp2 = LinSelectX.kr(type2, [0, 1, 0]);
-         hp2 = LinSelectX.kr(type2, [0, 0, 1]);
-         peak2 = SVF.ar(input, \peak2.kr(10000, 0.1).clip(20, 20000), rq.clip(0.001, 4), lp2, bp2, hp2);
+         peak1 = SVF.ar(input, \peak1.kr(10000, 0.1).clip(20, 20000), rq.clip(0.001, 4), 0, 1, 0);
+         peak2 = SVF.ar(input, \peak2.kr(10000, 0.1).clip(20, 20000), rq.clip(0.001, 4), 0, 1, 0);
 
          filter = peak1 + peak2;
 
