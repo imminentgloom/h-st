@@ -528,6 +528,8 @@ function redraw()
          s.blend_mode(5)
         
          local offset_1 = 128 * f_peak_1
+         local offset_2 = 128 * f_peak_2
+     
          s.move((32 - 32) + offset_1, 0)
          s.line((-32 - 32) + offset_1, 64)
          s.line((-32 + 32) + offset_1, 64)
@@ -688,13 +690,8 @@ function redraw_arc()
       local level = 5
       local s1 = 0
       local s2 = 0
-      local lp1 = 0
-      local lp2 = 0
       local bp1 = 0
       local bp2 = 0
-      local hp1 = 0
-      local hp2 = 0
-
     
       bp1 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + offset)
       bp2 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + 5.625 * 3 + offset)
