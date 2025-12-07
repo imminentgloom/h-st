@@ -66,7 +66,7 @@ Engine_Harvest : CroneEngine {
          gain = \gain.kr(1, 0.1);
          dist = (mix * gain).tanh * (1 / gain.sqrt) * \amp.kr(0.5, 0.1);
 
-         Out.ar(\out.ir(0), dist);
+         Out.ar(\out.ir(0), dist) * 0.5;
       }).add;
 
       SynthDef(\harvestdrone, {
