@@ -170,7 +170,7 @@ function Harvest.init(midicontrol)
    }
 
 -- fx
-   params:add_separator("fx_filter_delay", "filter + delay")
+   params:add_separator("fx_filter_delay", "lys")
    
    params:add{
       type        = "control",
@@ -212,7 +212,7 @@ function Harvest.init(midicontrol)
       end
    }
 
-   params:add_separator("fx_distortion", "distortion")
+   params:add_separator("fx_distortion", "grums")
 
    params:add{
       type        = "control",
