@@ -66,7 +66,7 @@ Engine_Harvest : CroneEngine {
          gain = \gain.kr(1, 0.1);
          dist = (mix * gain).tanh * (1 / gain.sqrt) * \amp.kr(0.5, 0.1);
 
-         Out.ar(\out.ir(0), dist) * 0.5;
+         Out.ar(\out.ir(0), dist);
       }).add;
 
       SynthDef(\harvestdrone, {
@@ -95,7 +95,7 @@ Engine_Harvest : CroneEngine {
 
          lpg = LPF.ar(max, amp.linexp(0, 1, 200, 20000), amp);
 
-         Out.ar(\out.ir(0), Pan2.ar(lpg));
+         Out.ar(\out.ir(0), Pan2.ar(lpg) * 0.5);
       }).add;
 
       SynthDef(\harvestpoly, {
@@ -140,7 +140,7 @@ Engine_Harvest : CroneEngine {
 
          lpg = LPF.ar(max, env.linexp(0, 1, 200, 20000), env * vel * amp);
 
-         Out.ar(\out.ir(0), Pan2.ar(lpg));
+         Out.ar(\out.ir(0), Pan2.ar(lpg) * 0.5);
       }).add;
 
       // initialize fx synth and bus
