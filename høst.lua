@@ -160,36 +160,39 @@ end
 -- params
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-params:add{
-   type = "group",
-   id   = "harvest",
-   name = "HØST",
-   n    = 25
-}
+function init_params()
+   params:add{
+      type = "group",
+      id   = "harvest",
+      name = "HØST",
+      n    = 25
+   }
 
-params:add{
-   type        = "option",
-   id          = "focus",
-   name        = "fokus",
-   options     = {"jord", "løv", "lys"},
-   default     = 1, 
-   action      = function(x)
-      prev_focus = focus
-      focus = x
-      if focus == 1 then
-         seed(particles, density)
-      elseif focus == 2 then
-         seed(particles, density)
-      elseif focus == 3 then
-         seed(particles, density)
+   params:add{
+      type        = "option",
+      id          = "focus",
+      name        = "fokus",
+      options     = {"jord", "løv", "lys"},
+      default     = 1,
+      action      = function(x)
+	 prev_focus = focus
+	 focus = x
+	 if focus == 1 then
+	    seed(particles, density)
+	 elseif focus == 2 then
+	    seed(particles, density)
+	 elseif focus == 3 then
+	    seed(particles, density)
+	 end
       end
-   end
-}
+   }
+end
 
 -- init
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 function init()
+   init_params()
    seed(particles, density)
 
    clk_redraw = clock.run(redraw_event)
