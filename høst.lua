@@ -175,15 +175,15 @@ function init_params()
       options     = {"jord", "løv", "lys"},
       default     = 1,
       action      = function(x)
-	 prev_focus = focus
-	 focus = x
-	 if focus == 1 then
-	    seed(particles, density)
-	 elseif focus == 2 then
-	    seed(particles, density)
-	 elseif focus == 3 then
-	    seed(particles, density)
-	 end
+         prev_focus = focus
+         focus = x
+         if focus == 1 then
+            seed(particles, density)
+         elseif focus == 2 then
+            seed(particles, density)
+         elseif focus == 3 then
+            seed(particles, density)
+         end
       end
    }
 end
