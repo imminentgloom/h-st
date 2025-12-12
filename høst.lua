@@ -588,7 +588,7 @@ function redraw_grid()
 
    -- light up held keys
    for n = 1, #playing do
-      for m = 1, math.min(trail, playing[n].x - 1) do
+      for m = 1, math.min(trail, playing[n].x - 1, g.rows - playing[n].y) do
          g:led(playing[n].x - m, playing[n].y + m, 0)
       end
    end
