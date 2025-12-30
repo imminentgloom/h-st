@@ -154,8 +154,10 @@ function Harvest.init(midicontrol)
       type        = "control",
       id          = "fx_body",
       name        = "Kropp",
-      controlspec = controlspec.new(0, 1, "lin", 0.001, 0),
+      controlspec = controlspec.new(0 - 0.001, 1 + 0.001, "lin", 0.001, 0),
       action      = function(x)
+         if x < 0 then params:set("fx_body", 1) end
+         if x > 1 then params:set("fx_body", 0) end
          engine.harvest_fx_set("body", x)
       end
    }
