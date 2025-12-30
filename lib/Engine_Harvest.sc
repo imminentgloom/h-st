@@ -46,25 +46,26 @@ Engine_Harvest : CroneEngine {
 
       // initialize synth defs
       SynthDef(\harvestfx, {
-         var input, body, filter, peak1, peak2, res, delay, time, feedback, mix, gain, dist;
+         var input, body, bodyLag, filter, peak1, peak2, res, delay, time, feedback, mix, gain, dist;
   
          input = In.ar(\inBus.ir(10), 2);
 
-         body     = \body.kr(0.0, 0.1);
-         res      = LinSelectX.kr(body * 3, [0.5, 0.5, 0.5 , 0.5]);
-         feedback = LinSelectX.kr(body * 3, [0.0, 0.2, 0.99, 0.8]);
+         body     = \body.kr(0.0);
+         res      = LinSelectX.kr(body * 4, [0.5, 0.5, 0.50, 0.50, 0.5]);
+         feedback = LinSelectX.kr(body * 4, [0.0, 0.5, 0.99, 0.99, 0.5]);
 
          peak1 = SVF.ar(input, \peak1.kr(115, 0.1).clip(20, 20000), res, 0, 1, 0);
          peak2 = SVF.ar(input, \peak2.kr(218, 0.1).clip(20, 20000), res, 0, 1, 0);
 
          filter = peak1 + peak2;
 
-         delay = XFade2.ar(filter, input, SelectX.kr(body * 3, [-1, -1, -1, 1]));
-         delay = delay + LPF.ar(LocalIn.ar(2), 4000) * feedback;
-         delay = DelayC.ar(delay, 10, \time.kr(1, 0.25));
+         time = \time.kr(1, 0.25);
+         delay = XFade2.ar(filter, input, SelectX.kr(body * 4, [-1, -1, -1, 1, 1]));
+         delay = delay + LPF.ar(LocalIn.ar(2), (4000 - (3000 * time * 0.5)).clip(20, 20000)) * feedback;
+         delay = DelayC.ar(delay, 10, time);
          LocalOut.ar(delay);
 
-         mix = SelectX.ar(body * 3, [input, filter, filter + delay * 0.7, input * 0.5 + delay]);
+         mix = SelectX.ar(body * 4, [input, filter, filter + delay * 0.7, input + delay * 0.7, input]);
 
          gain = \gain.kr(1, 0.1);
          dist = (mix * gain).tanh * (1 / gain.sqrt) * \amp.kr(0.5, 0.1);
