@@ -155,6 +155,23 @@ local function hold_note(x, y, z, note)
    end
 end
 
+local function arc_bar(enc, val, level)
+   local range = util.clamp(math.floor(val * 33), 0, 32.999)
+   for n = 1, range do
+      if n < range then 
+         a:led(enc, 33 + n, level)
+         a:led(enc, 33 - n, level)
+      else
+         if n > 33 then
+            a:led(enc, 1, math.floor(level * (val * 33 - range)))
+         else
+            a:led(enc, 33 + n, math.floor(level * (val * 33 - range)))
+            a:led(enc, 33 - n, math.floor(level * (val * 33 - range)))
+         end
+      end
+   end
+end
+
 -- init
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -304,27 +321,25 @@ end
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 a.delta = function(n, d)
-   d = d * 0.1
-
    if focus == 1 then -- Jord
-      if n == 1 then params:delta("drone_timbre", d) end
-      if n == 2 then params:delta( "drone_noise", d) end
-      if n == 3 then params:delta(  "drone_bias", d) end
-      if n == 4 then params:delta(  "drone_freq", d) end
+      if n == 1 then params:delta("drone_timbre", d * 0.10) end
+      if n == 2 then params:delta( "drone_noise", d * 0.10) end
+      if n == 3 then params:delta(  "drone_bias", d * 0.15) end
+      if n == 4 then params:delta(  "drone_freq", d * 0.05) end
    end
 
    if focus == 2 then -- Løv
-      if n == 1 then params:delta("poly_timbre", d) end
-      if n == 2 then params:delta( "poly_noise", d) end
-      if n == 3 then params:delta(  "poly_bias", d) end
-      if n == 4 then params:delta( "poly_shape", d) end
+      if n == 1 then params:delta("poly_timbre", d * 0.10) end
+      if n == 2 then params:delta( "poly_noise", d * 0.10) end
+      if n == 3 then params:delta(  "poly_bias", d * 0.15) end
+      if n == 4 then params:delta( "poly_shape", d * 0.10) end
    end
 
    if focus == 3 then -- Lys
-      if n == 1 then params:delta("fx_peak_1", d) end
-      if n == 2 then params:delta("fx_peak_2", d) end
-      if n == 3 then params:delta(  "fx_body", d) end
-      if n == 4 then params:delta(  "fx_time", d) end
+      if n == 1 then params:delta("fx_peak_1", d * 0.10) end
+      if n == 2 then params:delta("fx_peak_2", d * 0.10) end
+      if n == 3 then params:delta(  "fx_body", d * 0.10) end
+      if n == 4 then params:delta(  "fx_time", d * 0.05) end
    end
 end
 
@@ -472,7 +487,7 @@ function redraw()
       for n = 1, util.clamp(math.floor(#particles * (1 - f_time)), 1, #particles) do
          x = particles[n].x
          y = particles[n].y
-         for n = 1, 2 + math.floor(62 * f_body) do
+         for n = 1, 2 + math.floor(62 * 2 * math.abs(((f_body - 0.5) % 1) - 0.5)) do
             if particles[n].on == true then
                s.pixel(x - n, y + n)
             end
@@ -568,6 +583,8 @@ function redraw_arc()
    local  level = 5
    local     s1 = 0
    local     s2 = 0
+   local     s3 = 0
+   local     s4 = 0
    
    if focus == 1 then -- Jord
       -- e1
@@ -591,11 +608,10 @@ function redraw_arc()
       a:led(2, 33, 1)
       
       -- e3
-      s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("drone_bias") * 5.625 * 63 + offset)
-      a:segment(3, s1, s2, level)
+      arc_bar(3, params:get_raw("drone_bias"), level)
+      --a:led(3,  1, 1)
       a:led(3, 33, 1)
-      
+
       -- e4
       s1 = math.rad(offset)
       s2 = math.rad(params:get_raw("drone_freq") * 5.625 * 63 + offset)
@@ -626,9 +642,7 @@ function redraw_arc()
       a:led(2, 33, 1)
       
       -- e3
-      s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("poly_bias") * 5.625 * 63 + offset)
-      a:segment(3, s1, s2, level)
+      arc_bar(3, params:get_raw("poly_bias"), level)
       a:led(3, 33, 1)
       
       -- e4
@@ -650,17 +664,19 @@ function redraw_arc()
       -- e2
       s1 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + offset)
       s2 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + 5.625 * 3 + offset)
-      a:segment(2, s1, s2, level)
+      a:segment(2, s1, s2, level, s3, s4, 3)
       a:led(2, 33, 1)
 
       -- e3
-      s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("fx_body") * 5.625 * 63 + offset)
+      s1 = math.rad(params:get_raw("fx_body") * 5.625 * 64 - 5.625 * 8 + offset)
+      s2 = math.rad(params:get_raw("fx_body") * 5.625 * 64 + 5.625 * 7 + offset)
       a:segment(3, s1, s2, level)
-      a:led(3, 12, 1)
-      a:led(3, 33, 1)
-      a:led(3, 54, 1)
-      
+      local shift = 8
+      a:led(3,  1 + shift, 1)
+      a:led(3, 17 + shift, 1)
+      a:led(3, 33 + shift, 1)
+      a:led(3, 49 + shift, 1)
+
       -- e4
       s1 = math.rad(offset)
       s2 = math.rad(params:get_raw("fx_time") * 5.625 * 63 + offset)
