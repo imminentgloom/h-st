@@ -18,6 +18,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 2, "lin", 0.001, 0.5),
       action      = function(x)
          engine.harvest_fx_set("amp", x)
+         -- Harvest.fx_amp = x * 0.5
       end
    }
 
@@ -31,6 +32,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.8),
       action      = function(x)
          engine.harvest_drone_set("amp", x)
+			-- Harvest.drone_amp = x
       end
    }
 
@@ -41,6 +43,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.5),
       action      = function(x)
          engine.harvest_drone_set("timbre", x)
+			Harvest.drone_timbre = x
       end
    }
 
@@ -51,6 +54,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.0),
       action      = function(x)
          engine.harvest_drone_set("noise", x)
+			Harvest.drone_noise = x
       end
    }
 
@@ -61,6 +65,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0),
       action      = function(x)
          engine.harvest_drone_set("bias", x)
+			Harvest.drone_bias = x
       end
    }
 
@@ -71,6 +76,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0.2, 2000, "exp", 0.001, 117, "hz"),
       action      = function(x)
          engine.harvest_drone_set("freq", x)
+         Harvest.drone_freq = math.log(x / 0.2) / math.log(2000 / 0.2)
       end
    }
    
@@ -84,6 +90,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.8),
       action      = function(x)
          engine.harvest_poly_set("amp", x)
+			-- Harvest.poly_amp = x
       end
    }
 
@@ -94,6 +101,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.2),
       action      = function(x)
          engine.harvest_poly_set("timbre", x)
+			Harvest.poly_timbre = x
       end
    }
 
@@ -104,6 +112,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.3),
       action      = function(x)
          engine.harvest_poly_set("noise", x)
+			Harvest.poly_noise = x
       end
    }
 
@@ -114,6 +123,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.6),
       action      = function(x)
          engine.harvest_poly_set("bias", x)
+			Harvest.poly_bias = x
       end
    }
 
@@ -124,6 +134,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.1),
       action      = function(x)
          engine.harvest_poly_set("shape", x)
+			Harvest.poly_shape = x
       end
    }
 
@@ -137,6 +148,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(20, 20000, "exp", 0.001, 115, "hz"),
       action      = function(x)
          engine.harvest_fx_set("peak1", x)
+         Harvest.fx_peak_1 = math.log(x / 20) / math.log(20000 / 20)
       end
    }
    
@@ -147,6 +159,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(20, 20000, "exp", 0.001, 218, "hz"),
       action      = function(x)
          engine.harvest_fx_set("peak2", x)
+         Harvest.fx_peak_2 = math.log(x / 20) / math.log(20000 / 20)
       end
    }
 
@@ -159,6 +172,7 @@ function Harvest.init(midicontrol)
          if x < 0 then params:set("fx_body", 1) end
          if x > 1 then params:set("fx_body", 0) end
          engine.harvest_fx_set("body", x)
+			Harvest.fx_body = x
       end
    }
 
@@ -169,6 +183,35 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0.01, 2, "lin", 0.001, 1, "s"),
       action      = function(x)
          engine.harvest_fx_set("time", x)
+			Harvest.fx_time = (x - 0.01) / 1.99
+      end
+   }
+
+   params:add{
+      type        = "control",
+      id          = "fx_res",
+      name        = "Resonans",
+      controlspec = controlspec.new(0, 1, "lin", 0.001, 0.5),
+      formatter   = function(x)
+         return math.floor(x:get() * 100) .. " %"
+      end,
+      action      = function(x)
+         engine.harvest_fx_set("res_max", x)
+			-- Harvest.fx_res = x
+      end
+   }
+
+   params:add{
+      type        = "control",
+      id          = "fx_fb",
+      name        = "Ekko",
+      controlspec = controlspec.new(0, 1, "lin", 0.001, 1),
+      formatter   = function(x)
+         return math.floor(x:get() * 100) .. " %"
+      end,
+      action      = function(x)
+         engine.harvest_fx_set("fb_max", x)
+			-- Harvest.fx_fb = x
       end
    }
 
@@ -181,6 +224,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0.5, 16, "lin", 0.001, 0.5),
       action      = function(x)
          engine.harvest_fx_set("gain", x)
+			-- Harvest.fx_gain = x
       end
    }
 
@@ -194,6 +238,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0.001, 10, "exp", 0.001, 1, "s"),
       action      = function(x)
          engine.harvest_poly_set("max_attack", x)
+			-- Harvest.poly_max_attack = math.log(x / 0.001) / math.log(10 / 0.001)
       end
    }
 
@@ -204,6 +249,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0.001, 10, "exp", 0.001, 3, "s"),
       action      = function(x)
          engine.harvest_poly_set("max_release", x)
+			-- Harvest.poly_max_release = math.log(x / 0.001) / math.log(10 / 0.001)
       end
    }
    
@@ -212,11 +258,12 @@ function Harvest.init(midicontrol)
       id          = "poly_scale",
       name        = "Skala",
       controlspec = controlspec.new(0.01, 1, "lin", 0.01, 1),
-      formatter    = function(x)
+      formatter   = function(x)
          return math.floor(x:get() * 100) .. " %"
       end,
       action      = function(x)
          engine.harvest_poly_set("scale", x)
+			-- Harvest.poly_scale = x
       end
    }
 
@@ -228,6 +275,7 @@ function Harvest.init(midicontrol)
       default     = 1,
       action      = function(x)
          engine.harvest_poly_set("loop", x - 1)
+         Harvest.poly_loop = x - 1
       end
    }
 
