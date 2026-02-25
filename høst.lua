@@ -55,6 +55,13 @@ local function redraw_event()
       end
       redraw()
       redraw_grid()
+      -- redraw_arc()
+   end
+end
+
+local function redraw_arc_event()
+    while true do
+      clock.sleep(1/120)
       redraw_arc()
    end
 end
@@ -75,7 +82,11 @@ end
 
 local function seed(t, n)
    for n = 1, n do
-      t[n] = {x = math.random(1, 128), y = math.random(1, 64), on = true, level = 15} 
+      if n == 1 then
+         t[n] = {x = math.random(32, 96), y = math.random(16, 48), on = true, level = 15, noise = 0}
+      else
+         t[n] = {x = math.random(1, 128), y = math.random(1, 64), on = true, level = 15, noise = 0}
+      end
    end
 end
 
@@ -179,13 +190,14 @@ function init()
    seed(particles, density)
 
    clk_redraw = clock.run(redraw_event)
+   clk_redraw_arc = clock.run(redraw_arc_event)
    clk_splash = clock.run(splash_event)
 
    params:add{
       type = "group",
       id   = "harvest",
       name = "HØST",
-      n    = 27
+      n    = 29
    }
 
    params:add{
@@ -225,7 +237,9 @@ function init()
    }
 
    if save_on_exit then params:read(norns.state.data .. "state.pset") end
-   
+   params:bang()
+
+
    params:set("focus", 1)
 end
 
@@ -233,11 +247,11 @@ end
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 function key(n, z)
-   if n == 1 and z == 1 then k1_held =  true end
+   if n == 1 and z == 1 then k1_held = true  end
    if n == 1 and z == 0 then k1_held = false end
-   if n == 2 and z == 1 then k2_held =  true end
+   if n == 2 and z == 1 then k2_held = true  end
    if n == 2 and z == 0 then k2_held = false end
-   if n == 3 and z == 1 then k3_held =  true end
+   if n == 3 and z == 1 then k3_held = true  end
    if n == 3 and z == 0 then k3_held = false end
    if n == 2 and z == 1 and not k3_held then params:set("focus", 1) end
    if n == 3 and z == 1 and not k2_held then params:set("focus", 2) end
@@ -248,8 +262,8 @@ end
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 function enc(n, d)
-   if n == 1 then params:delta(     "focus", d) end
-   if n == 2 then params:delta(   "fx_gain", d) end
+   if n == 1 then params:delta("focus"     , d) end
+   if n == 2 then params:delta("fx_gain"   , d) end
    if n == 3 then params:delta("poly_scale", d) end
 end
 
@@ -323,23 +337,23 @@ end
 a.delta = function(n, d)
    if focus == 1 then -- Jord
       if n == 1 then params:delta("drone_timbre", d * 0.10) end
-      if n == 2 then params:delta( "drone_noise", d * 0.10) end
-      if n == 3 then params:delta(  "drone_bias", d * 0.15) end
-      if n == 4 then params:delta(  "drone_freq", d * 0.05) end
+      if n == 2 then params:delta("drone_noise" , d * 0.10) end
+      if n == 3 then params:delta("drone_bias"  , d * 0.15) end
+      if n == 4 then params:delta("drone_freq"  , d * 0.05) end
    end
 
    if focus == 2 then -- Løv
       if n == 1 then params:delta("poly_timbre", d * 0.10) end
-      if n == 2 then params:delta( "poly_noise", d * 0.10) end
-      if n == 3 then params:delta(  "poly_bias", d * 0.15) end
-      if n == 4 then params:delta( "poly_shape", d * 0.10) end
+      if n == 2 then params:delta("poly_noise" , d * 0.10) end
+      if n == 3 then params:delta("poly_bias"  , d * 0.15) end
+      if n == 4 then params:delta("poly_shape" , d * 0.10) end
    end
 
    if focus == 3 then -- Lys
       if n == 1 then params:delta("fx_peak_1", d * 0.10) end
       if n == 2 then params:delta("fx_peak_2", d * 0.10) end
-      if n == 3 then params:delta(  "fx_body", d * 0.10) end
-      if n == 4 then params:delta(  "fx_time", d * 0.05) end
+      if n == 3 then params:delta("fx_body"  , d * 0.10) end
+      if n == 4 then params:delta("fx_time"  , d * 0.05) end
    end
 end
 
@@ -349,66 +363,48 @@ end
 function redraw()
    s.clear()
    
-   local d_timbre = params:get("drone_timbre")
-   local  d_noise = params:get("drone_noise")
-   local   d_bias = params:get("drone_bias")
-   local p_timbre = params:get("poly_timbre")
-   local  p_noise = params:get("poly_noise")
-   local   p_bias = params:get("poly_bias")
-   local  p_shape = params:get("poly_shape")
-   local f_peak_1 = params:get_raw("fx_peak_1")
-   local f_peak_2 = params:get_raw("fx_peak_2")
-   local   f_body = params:get("fx_body")
-   local   f_time = params:get_raw("fx_time")
-   
    if splash then
-      s.aa(1)
+      s.aa(0)
       s.level(splash_level)
       s.move(63, 55)
       s.font_face(12)
       s.font_size(60)
-      s.text_center("Høst")
-      s.aa(0)
+	  s.text_center("Høst")
    end
 
-   if focus == 1 then -- Jord
-      -- noise
-      for n = 1, util.clamp(math.floor(#particles * (d_bias)), 1, #particles) do
-         if frame % 4 == 1 then
-            if math.random() < d_noise * 0.1 then
-               particles[n].level = 1
-            else
-               particles[n].level = 2
-            end
-         end
-      end
+   if focus == 1 then -- Jord      
+      for n = 1, util.clamp(math.floor(#particles * (Harvest.drone_bias)), 1, #particles) do
+         if particles[n].on then
 
-      -- detrius
-      for n = 1, util.clamp(math.floor(#particles * (d_bias)), 1, #particles) do
-         local level = 1
-
-         if d_timbre < 0.5 then
-            level = particles[n].level + math.floor(13 * (d_timbre * -2 + 1))
-         else
-            if particles[n].x % 32 > 16 then
-               level = particles[n].level + math.floor(13 * (d_timbre * 2 - 1))
-            else
-               level = particles[n].level
+            -- noise
+            if frame % 4 == 1 then
+               if math.random() < Harvest.drone_noise * 0.1 then
+                  particles[n].noise = 0.49
+               else
+                  particles[n].noise = 1
+               end
             end
-         end
-            
-         s.level(level)
-         
-         if particles[n].on == true then
+
+            -- detrius
+            particles[n].level = 1
+
+            if Harvest.drone_timbre < 0.5 then
+               particles[n].level = 1 + math.floor(13 * (Harvest.drone_timbre * -2 + 1))
+            else
+               if particles[n].x % 32 > 16 then
+                  particles[n].level = 1 + math.floor(13 * (Harvest.drone_timbre * 2 - 1))
+               end
+            end
+               
+            s.level(1 + math.floor(particles[n].level * particles[n].noise))
             s.pixel(particles[n].x, particles[n].y)
+            s.fill()   
          end
-
-         s.fill()
       end
    end
-
+   
    if focus == 2 then -- Løv
-      local offset = 64 * p_timbre
+      local offset = 64 * Harvest.poly_timbre
 
       -- light
       s.level(7)
@@ -417,8 +413,8 @@ function redraw()
 
       -- noise
       if frame % 4 == 1 then
-         for n = 1, util.clamp(math.floor(#particles * (p_bias)), 1, #particles) do
-            if math.random() < p_noise * 0.1 then
+         for n = 1, math.max(math.floor(#particles * (Harvest.poly_bias)), 1) do
+            if math.random() < Harvest.poly_noise * 0.1 then
                particles[n].level = 10
             else
                particles[n].level = 15
@@ -427,7 +423,7 @@ function redraw()
       end
       
       -- shadow
-      for n = 1, util.clamp(math.floor(#particles * p_bias), 1, #particles) do
+      for n = 1, math.max(math.floor(#particles * Harvest.poly_bias), 1) do
          x = particles[n].x
          y = particles[n].y
          for n = 1, 2 do
@@ -440,7 +436,7 @@ function redraw()
       end
 
       -- dark
-      if p_timbre < 0.5 then
+      if Harvest.poly_timbre < 0.5 then
          s.level(0)
          s.move(64 + offset,  0)
          s.line( 0 + offset, 64)
@@ -462,7 +458,7 @@ function redraw()
       end
       
       -- detrius
-      for n = 1, util.clamp(math.floor(#particles * p_bias), 1, #particles) do
+      for n = 1, math.max(math.floor(#particles * Harvest.poly_bias), 1) do
          x = particles[n].x
          y = particles[n].y
          if particles[n].on == true then
@@ -474,8 +470,8 @@ function redraw()
    end
 
    if focus == 3 then -- Lys
-      local offset_1 = 64 * f_peak_1
-      local offset_2 = 64 * f_peak_2
+      local offset_1 = 64 * Harvest.fx_peak_1
+      local offset_2 = 64 * Harvest.fx_peak_2
 
       -- light
       s.level(7)
@@ -484,10 +480,10 @@ function redraw()
 
       -- shadow
       s.level(3)
-      for n = 1, util.clamp(math.floor(#particles * (1 - f_time)), 1, #particles) do
+      for n = 1, math.max(math.floor(#particles * (1 - Harvest.fx_time)), 1) do
          x = particles[n].x
          y = particles[n].y
-         for n = 1, 2 + math.floor(62 * 2 * math.abs(((f_body - 0.5) % 1) - 0.5)) do
+         for n = 1, 2 + math.floor(62 * 2 * math.abs(((Harvest.fx_body - 0.5) % 1) - 0.5)) do
             if particles[n].on == true then
                s.pixel(x - n, y + n)
             end
@@ -499,14 +495,14 @@ function redraw()
       s.level(1)
       s.blend_mode(5)
      
-      local offset_1 = 128 * f_peak_1
+      local offset_1 = 128 * Harvest.fx_peak_1
       s.move(( 32 - 32) + offset_1,  0)
       s.line((-32 - 32) + offset_1, 64)
       s.line((-32 + 32) + offset_1, 64)
       s.line(( 32 + 32) + offset_1,  0)
       s.fill()
    
-      local offset_2 = 128 * f_peak_2
+      local offset_2 = 128 * Harvest.fx_peak_2
       s.move(( 32 - 32) + offset_2,  0)
       s.line((-32 - 32) + offset_2, 64)
       s.line((-32 + 32) + offset_2, 64)
@@ -517,7 +513,7 @@ function redraw()
 
       -- detrius
       s.level(15)
-      for n = 1, util.clamp(math.floor(#particles * (1 - f_time)), 1, #particles) do
+      for n = 1, math.max(math.floor(#particles * (1 - Harvest.fx_time)), 1) do
          x = particles[n].x
          y = particles[n].y
          if particles[n].on == true then
@@ -581,14 +577,12 @@ function redraw_arc()
    a:all(0)
    local offset = 5.625 * -31 -- 1 led = 5.625 degrees
    local  level = 5
-   local     s1 = 0
-   local     s2 = 0
-   local     s3 = 0
-   local     s4 = 0
+   local s1
+   local s2
    
    if focus == 1 then -- Jord
       -- e1
-      local val = params:get_raw("drone_timbre") * 2 - 1
+      local val = Harvest.drone_timbre * 2 - 1
       if val < 0 then
          s1 = math.rad(val * 5.625 * 31)
          s2 = math.rad(0)
@@ -602,19 +596,19 @@ function redraw_arc()
       
       -- e2
       s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("drone_noise") * 5.625 * 63 + offset)
+      s2 = math.rad(Harvest.drone_noise * 5.625 * 63 + offset)
       a:segment(2, s1, s2, level)
       a:led(2,  1, 1)
       a:led(2, 33, 1)
       
       -- e3
-      arc_bar(3, params:get_raw("drone_bias"), level)
+      arc_bar(3, Harvest.drone_bias, level)
       --a:led(3,  1, 1)
       a:led(3, 33, 1)
 
       -- e4
       s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("drone_freq") * 5.625 * 63 + offset)
+      s2 = math.rad(Harvest.drone_freq * 5.625 * 63 + offset)
       a:segment(4, s1, s2, level)
       a:led(4,  1, 1)
       a:led(4, 33, 1)
@@ -622,7 +616,7 @@ function redraw_arc()
    
    if focus == 2 then -- Løv
       -- e1
-      local val = params:get_raw("poly_timbre") * 2 - 1
+      local val = Harvest.poly_timbre * 2 - 1
       if val < 0 then
          s1 = math.rad(val * 5.625 * 31)
          s2 = math.rad(0)
@@ -636,18 +630,18 @@ function redraw_arc()
       
       -- e2
       s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("poly_noise") * 5.625 * 63 + offset)
+      s2 = math.rad(Harvest.poly_noise * 5.625 * 63 + offset)
       a:segment(2, s1, s2, level)
       a:led(2,  1, 1)
       a:led(2, 33, 1)
       
       -- e3
-      arc_bar(3, params:get_raw("poly_bias"), level)
+      arc_bar(3, Harvest.poly_bias, level)
       a:led(3, 33, 1)
       
       -- e4
       s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("poly_shape") * 5.625 * 63 + offset)
+      s2 = math.rad(Harvest.poly_shape * 5.625 * 63 + offset)
       a:segment(4, s1, s2, level)
       a:led(4, 33, 1)
       a:led(4, 12, 1)
@@ -655,21 +649,24 @@ function redraw_arc()
    end
 
    if focus == 3 then -- Lys
+      local width = 8
+      local p
+
       -- e1
-      s1 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + offset)
-      s2 = math.rad(params:get_raw("fx_peak_1") * 5.625 * 60 + 5.625 * 3 + offset)
-      a:segment(1, s1, s2, level)
+      s1 = math.rad(Harvest.fx_peak_1 * 5.625 * (63 - width) + offset)
+      s2 = math.rad(Harvest.fx_peak_1 * 5.625 * (63 - width) + 5.625 * width + offset)
+      a:segment(1, s1, s2, 6)
       a:led(1, 33, 1)
       
       -- e2
-      s1 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + offset)
-      s2 = math.rad(params:get_raw("fx_peak_2") * 5.625 * 60 + 5.625 * 3 + offset)
-      a:segment(2, s1, s2, level, s3, s4, 3)
+      s1 = math.rad(Harvest.fx_peak_2 * 5.625 * (63 - width) + offset)
+      s2 = math.rad(Harvest.fx_peak_2 * 5.625 * (63 - width) + 5.625 * width + offset)
+      a:segment(2, s1, s2, 6)
       a:led(2, 33, 1)
 
       -- e3
-      s1 = math.rad(params:get_raw("fx_body") * 5.625 * 64 - 5.625 * 8 + offset)
-      s2 = math.rad(params:get_raw("fx_body") * 5.625 * 64 + 5.625 * 7 + offset)
+      s1 = math.rad(Harvest.fx_body * 5.625 * 64 - 5.625 * 8 + offset)
+      s2 = math.rad(Harvest.fx_body * 5.625 * 64 + 5.625 * 7 + offset)
       a:segment(3, s1, s2, level)
       local shift = 8
       a:led(3,  1 + shift, 1)
@@ -679,7 +676,7 @@ function redraw_arc()
 
       -- e4
       s1 = math.rad(offset)
-      s2 = math.rad(params:get_raw("fx_time") * 5.625 * 63 + offset)
+      s2 = math.rad(Harvest.fx_time * 5.625 * 63 + offset)
       a:segment(4, s1, s2, level)
       a:led(4, 33, 1)
    end
