@@ -51,8 +51,8 @@ Engine_Harvest : CroneEngine {
          input = In.ar(\inBus.ir(10), 2);
 
          body     = \body.kr(0.0);
-         res      = LinSelectX.kr(body * 4, [0.5, 0.5, 0.50, 0.50, 0.5]);
-         feedback = LinSelectX.kr(body * 4, [0.0, 0.5, 0.99, 0.99, 0.5]);
+         res      = LinSelectX.kr(body * 4, [0.5, 0.5, 0.50, 0.50, 0.5]) * \res_max.kr(0.5);
+         feedback = LinSelectX.kr(body * 4, [0.0, 0.5, 0.99, 0.99, 0.5]) * \fb_max.kr(1.0);
 
          peak1 = SVF.ar(input, \peak1.kr(115, 0.1).clip(20, 20000), res, 0, 1, 0);
          peak2 = SVF.ar(input, \peak2.kr(218, 0.1).clip(20, 20000), res, 0, 1, 0);
