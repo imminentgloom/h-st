@@ -101,7 +101,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.2),
       action      = function(x)
          engine.harvest_poly_set("timbre", x)
-			Harvest.poly_timbre = x
+			   Harvest.poly_timbre = x
       end
    }
 
@@ -112,7 +112,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.3),
       action      = function(x)
          engine.harvest_poly_set("noise", x)
-			Harvest.poly_noise = x
+			   Harvest.poly_noise = x
       end
    }
 
@@ -123,7 +123,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.6),
       action      = function(x)
          engine.harvest_poly_set("bias", x)
-			Harvest.poly_bias = x
+			   Harvest.poly_bias = x
       end
    }
 
@@ -134,7 +134,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0, 1, "lin", 0.001, 0.1),
       action      = function(x)
          engine.harvest_poly_set("shape", x)
-			Harvest.poly_shape = x
+			   Harvest.poly_shape = x
       end
    }
 
@@ -172,7 +172,7 @@ function Harvest.init(midicontrol)
          if x < 0 then params:set("fx_body", 1) end
          if x > 1 then params:set("fx_body", 0) end
          engine.harvest_fx_set("body", x)
-			Harvest.fx_body = x
+         Harvest.fx_body = x
       end
    }
 
@@ -183,7 +183,7 @@ function Harvest.init(midicontrol)
       controlspec = controlspec.new(0.01, 2, "lin", 0.001, 1, "s"),
       action      = function(x)
          engine.harvest_fx_set("time", x)
-			Harvest.fx_time = (x - 0.01) / 1.99
+			   Harvest.fx_time = (x - 0.01) / 1.99
       end
    }
 
