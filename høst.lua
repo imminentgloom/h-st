@@ -21,7 +21,8 @@ local g = grid.connect()
 local a = arc.connect()
 
 local          s = screen
-local        fps = 60
+local        fps = 30
+local  arc_dirty = true
 local     splash = true
 local      frame = 1
 local  intensity = 8
@@ -53,16 +54,19 @@ local function redraw_event()
       else
          frame = frame + 1
       end
+      arc_dirty = true
       redraw()
       redraw_grid()
-      -- redraw_arc()
    end
 end
 
 local function redraw_arc_event()
-    while true do
-      clock.sleep(1/120)
-      redraw_arc()
+   while true do
+      clock.sleep(1/90)
+      if arc_dirty then
+         redraw_arc()
+         arc_dirty = false
+      end
    end
 end
 
@@ -74,6 +78,12 @@ local function splash_event()
          splash_level = splash_level - 1
       end
       splash = false
+   end
+end
+
+local function chaos_event()
+   while true do
+      
    end
 end
 
@@ -233,12 +243,13 @@ function init()
          else
             hold = true
          end
+         Harvest.poly_hold= x - 1
       end
    }
 
    if save_on_exit then params:read(norns.state.data .. "state.pset") end
-   params:bang()
 
+   params:bang()
 
    params:set("focus", 1)
 end
@@ -335,6 +346,8 @@ end
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 a.delta = function(n, d)
+   arc_dirty = true
+
    if focus == 1 then -- Jord
       if n == 1 then params:delta("drone_timbre", d * 0.10) end
       if n == 2 then params:delta("drone_noise" , d * 0.10) end
@@ -369,7 +382,7 @@ function redraw()
       s.move(63, 55)
       s.font_face(12)
       s.font_size(60)
-	  s.text_center("Høst")
+	    s.text_center("Høst")
    end
 
    if focus == 1 then -- Jord      
@@ -545,8 +558,8 @@ function redraw_grid()
    for n = 1, 16 do g:led(n, 8, background) end
    
    -- coll 1 off
-   if not hold then g:led(1, 1, background) end
-   if not hold then g:led(1, 2, background) end
+   g:led(1, 1, background)
+   g:led(1, 2, background)
    for n = 6, 8 do 
       g:led(1, n, background)
    end
@@ -562,8 +575,8 @@ function redraw_grid()
    end
 
    -- col 1 on
-   if params:get("poly_hold") == 2 then g:led(1, 1, 10) end 
-   if params:get("poly_loop") == 2 then g:led(1, 2, 10) end 
+   if Harvest.poly_hold == 1 then g:led(1, 1, 10) end 
+   if Harvest.poly_loop == 1 then g:led(1, 2, 10) end 
    g:led(1, 6 - oct, 5)
    g:led(1, 5 + focus, 5)
 
